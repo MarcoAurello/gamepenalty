@@ -17,8 +17,8 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body class="tela-cheia">
   <main class="app">
@@ -28,6 +28,7 @@
       <div class="capa-inicio">
         <img class="capa-img" src="assets/capa-inicio.jpg" alt="O goleiro Orelha defendendo a bola" width="688" height="1529">
         <div class="capa-conteudo">
+          <p class="selo-topo">Pênaltis · Faltas</p>
           <h1 class="titulo"><span>GOLEIRO</span> <span class="ouro">ORELHA</span></h1>
           <p class="slogan">Pênaltis e faltas: defenda ou faça o gol!</p>
           <form class="cartao" id="form-nome" autocomplete="off">
@@ -46,7 +47,8 @@
 
     <!-- 2. Modo: Goleiro ou Jogador -->
     <section class="tela" id="tela-modo">
-      <h2 class="subtitulo">Escolha quem você quer ser, <span id="nome-modo"></span>!</h2>
+      <p class="selo-topo">Escolha o modo</p>
+      <h2 class="subtitulo">Quem você quer ser, <span id="nome-modo"></span>?</h2>
       <div class="grade-escolhas">
         <button class="escolha" type="button" data-modo="goleiro">
           <span class="escolha-sprite" data-sprite="orelhaGoleiro" data-estado="pronto"></span>
@@ -64,6 +66,7 @@
 
     <!-- 3. Cobrança e nível -->
     <section class="tela" id="tela-nivel">
+      <p class="selo-topo">Partida</p>
       <h2 class="subtitulo">Como vai ser a disputa?</h2>
       <div class="cartao cartao-config">
         <p class="rotulo">Cobrança</p>
@@ -177,8 +180,8 @@
 
   <footer class="credito">© <b>Marco Nunes</b> — Todos os direitos reservados</footer>
 
-  <script src="dados.js?v=3"></script>
-  <script src="jogo.js?v=3"></script>
+  <script src="dados.js?v=4"></script>
+  <script src="jogo.js?v=4"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
