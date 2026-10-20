@@ -1,9 +1,9 @@
 /* Goleiro Orelha — dados do jogo. © Marco Nunes — Todos os direitos reservados. */
 
-// Folhas de sprites (quadros de 320x320) geradas por ferramentas/sprites.html.
+// Folhas de sprites (quadros de 448x448) geradas por ferramentas/sprites.html.
 // Em cada quadro, o pé do personagem fica no ponto PE_DO_QUADRO.
-const QUADRO = 320;
-const PE_DO_QUADRO = { x: 160, y: 288 };
+const QUADRO = 448;
+const PE_DO_QUADRO = { x: 224, y: 400 };
 
 const ESTADOS_GOLEIRO = {
   pronto: { linha: 0, quadros: 2, fps: 3, repete: true },

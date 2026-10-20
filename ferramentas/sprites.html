@@ -13,10 +13,12 @@
 <p id="estado">gerando…</p>
 <div id="saida"></div>
 <script src="boneco.js"></script>
+<script src="boneco-plano.js"></script>
 <script>
 /* Gera as folhas de sprites (quadros de 320x320) de cada personagem e salva em personagens/<id>/sprites.png.
    Rode com: python ferramentas/receber.py e abra http://localhost:5570/ferramentas/sprites.html */
-const Q = 320;   // tamanho do quadro
+const Q = 448;   // tamanho do quadro (as poses são pensadas em 320 e ampliadas 1,4x)
+const AMPLIA = Q / 320;
 const P = (o) => ({ x: 160, y: 205, ...o });
 
 // ---------- poses do goleiro (de frente para a câmera) ----------
@@ -98,7 +100,9 @@ function folha(estilo, estados) {
       ctx.save();
       ctx.translate(col * Q, linha * Q);
       if (espelhar) { ctx.translate(Q, 0); ctx.scale(-1, 1); }
-      Boneco.desenhar(ctx, estilo, pose);
+      ctx.scale(AMPLIA, AMPLIA);
+      // estilo flat: corpo mais alto, então o quadril sobe 15 px
+      BonecoPlano.desenhar(ctx, estilo, { ...pose, y: pose.y - 15 });
       ctx.restore();
     });
   });

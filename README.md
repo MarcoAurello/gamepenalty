@@ -26,12 +26,27 @@ e pode ser instalado como app (PWA, funciona offline).
 
 Ajustes em `dados.js` (`NIVEIS`, `ZONAS`, `FRASES`).
 
-## Tela (como no protótipo)
+## Tela (vertical, como os jogos de pênalti de celular)
 
-- **Painel lateral**: Som (on/off), Pausar, Ajustes (nível e torcida), Ajuda e Sair. No celular em pé vira uma barra em cima.
-- **Campo**: visão de cima, gol com rede ao fundo, goleiro preparado, atacante na entrada da área.
-  Setas em volta do goleiro (modo Goleiro) e linhas pontilhadas sugerindo o arco do chute (modo Jogador).
-- **Placar**: defesas e gols; aviso grande de GOL, DEFESA, TRAVE ou FORA.
+- **Câmera atrás do cobrador**, em perspectiva 3D: o cobrador aparece grande embaixo, de costas, e o gol fica ao fundo,
+  com torcida azul e placas. A bola voa em 3D (largura, altura e distância) e diminui conforme se afasta, com sombra no chão.
+- Na falta, a câmera vai para o lado da bola, a barreira pula e a bola faz curva por cima dela.
+- **Em cima**: pausar, som, as estrelas de cada cobrança (⭐ acerto, ❌ erro), ajuda, ajustes e sair.
+- **Modo Goleiro**: botões redondos nas laterais e embaixo (ou toque direto no canto do gol).
+- No computador o jogo aparece no formato de celular (9:16).
+- **Tela inicial** com o pôster do Orelha.
+
+## Sensação de jogo
+
+Seguindo boas práticas de jogos 2D: animação com preparação e continuação (o cobrador desacelera antes do chute,
+o goleiro cai e levanta poeira), bola que amassa no chute e no impacto, tremor de tela curto, micro pausa no impacto,
+zoom suave da câmera durante o voo, partículas (grama, estrelas na defesa, confete no gol), ordem de desenho por
+profundidade, passo de física fixo (1/120 s) e tolerância no toque um instante antes do chute.
+
+## Sons
+
+Tudo gerado no aparelho: batucada agitada de fundo (surdo, caixa, tamborim e agogô) com a torcida, e no gol uma
+"música de torcida" (Olé, olé, olé na corneta, bumbo, palmas e a torcida explodindo). Também apito, chute, rede, trave e defesa.
 
 ## Android e iPhone
 
@@ -44,12 +59,13 @@ Ajustes em `dados.js` (`NIVEIS`, `ZONAS`, `FRASES`).
 - `index.html`, `style.css`: telas e visual.
 - `jogo.js`: fluxo, campo (canvas), cobranças, voo da bola, defesa, desenho do chute, sons e instalação.
 - `dados.js`: sprites, direções (zonas), níveis e frases.
-- `personagens/<id>/sprites.png`: folhas de sprites (quadros de 320x320):
+- `personagens/<id>/sprites.png`: folhas de sprites no estilo vetorial flat (quadros de 448x448):
   - `orelha`: goleiro (pronto, mergulhos alto/baixo para os dois lados, pulo, encaixe, comemoração, tristeza);
   - `orelha-atacante`: o Orelha de costas com a 10 (pronto, corrida, chute, comemoração, tristeza);
   - `rival-goleiro` e `rival-atacante`: os adversários.
 - `personagens/orelha/capa.png`: figurinha do Orelha (tela inicial). `icons/`: ícones do app.
-- `ferramentas/boneco.js` e `ferramentas/sprites.html`: o desenho vetorial dos personagens e o gerador das folhas
+- `ferramentas/boneco-plano.js` (estilo flat do jogo), `ferramentas/boneco.js` (estilo figurinha da capa e dos ícones)
+  e `ferramentas/sprites.html` (gerador das folhas)
   (rode `python ferramentas/receber.py` e abra http://localhost:5570/ferramentas/sprites.html).
 - `referencias/`: protótipo, regras e fotos de referência (fora do servidor).
 

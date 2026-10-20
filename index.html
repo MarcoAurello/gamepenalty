@@ -18,16 +18,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
-<body>
+<body class="tela-cheia">
   <main class="app">
 
     <!-- 1. Início: figurinha do Orelha e nome do jogador -->
     <section class="tela ativa" id="tela-nome">
-      <div class="inicio">
-        <img class="figurinha" src="personagens/orelha/capa.png" alt="Figurinha do Goleiro Orelha" width="600" height="800">
-        <div class="inicio-lado">
+      <div class="capa-inicio">
+        <img class="capa-img" src="assets/capa-inicio.jpg" alt="O goleiro Orelha defendendo a bola" width="688" height="1529">
+        <div class="capa-conteudo">
           <h1 class="titulo"><span>GOLEIRO</span> <span class="ouro">ORELHA</span></h1>
           <p class="slogan">Pênaltis e faltas: defenda ou faça o gol!</p>
           <form class="cartao" id="form-nome" autocomplete="off">
@@ -39,6 +39,7 @@
             <button class="btn-grande" type="submit">Entrar em campo ▶</button>
           </form>
           <button class="btn-sec" id="btn-instalar" type="button" hidden>📲 Instalar app</button>
+          <p class="credito-capa">© Marco Nunes — Todos os direitos reservados</p>
         </div>
       </div>
     </section>
@@ -88,38 +89,36 @@
       </div>
     </section>
 
-    <!-- 4. Jogo: painel lateral + campo -->
+    <!-- 4. Jogo: tela vertical, câmera atrás do cobrador (como os jogos de pênalti de celular) -->
     <section class="tela" id="tela-jogo">
-      <div class="jogo">
-        <nav class="painel" aria-label="Controles do jogo">
-          <button class="btn-painel" id="btn-som" type="button" aria-label="Som ligado"><span class="ic">⏻</span><span class="tx">Som</span></button>
-          <button class="btn-painel" id="btn-pausa" type="button" aria-label="Pausar"><span class="ic">⏸</span><span class="tx">Pausar</span></button>
-          <button class="btn-painel" id="btn-config" type="button" aria-label="Configurações"><span class="ic">⚙</span><span class="tx">Ajustes</span></button>
-          <button class="btn-painel" id="btn-ajuda" type="button" aria-label="Ajuda"><span class="ic">?</span><span class="tx">Ajuda</span></button>
-          <button class="btn-painel" id="btn-sair" type="button" aria-label="Sair da partida"><span class="ic">⌂</span><span class="tx">Sair</span></button>
-        </nav>
-        <div class="campo-area">
-          <canvas id="campo" aria-label="Campo de futebol"></canvas>
-          <div class="placar" aria-live="polite">
-            <p class="placar-titulo">PLACAR</p>
-            <p><span id="rotulo-a">DEFESAS</span> <b id="placar-a">0</b></p>
-            <p><span id="rotulo-b">GOLS</span> <b id="placar-b">0</b></p>
-            <p class="placar-cobranca" id="placar-cobranca">1/5</p>
+      <div class="palco">
+        <canvas id="campo" aria-label="Campo de futebol"></canvas>
+        <div class="hud">
+          <div class="hud-grupo">
+            <button class="btn-hud" id="btn-pausa" type="button" aria-label="Pausar">⏸</button>
+            <button class="btn-hud" id="btn-som" type="button" aria-label="Som ligado">🔊</button>
           </div>
-          <div class="aviso" id="aviso" aria-live="assertive"></div>
-          <div class="dica" id="dica" hidden></div>
-          <!-- controles do goleiro: as 5 direções -->
-          <div class="controles" id="controles" hidden>
-            <p class="controles-titulo">CONTROLES DO GOLEIRO</p>
-            <div class="controles-grade">
-              <button class="dir" type="button" data-zona="esqAlto" aria-label="Pular alto à esquerda">↖</button>
-              <button class="dir" type="button" data-zona="centro" aria-label="Defender no centro">⬆</button>
-              <button class="dir" type="button" data-zona="dirAlto" aria-label="Pular alto à direita">↗</button>
-              <button class="dir" type="button" data-zona="esqBaixo" aria-label="Pular à esquerda">⬅</button>
-              <span></span>
-              <button class="dir" type="button" data-zona="dirBaixo" aria-label="Pular à direita">➡</button>
-            </div>
+          <div class="estrelas-hud" id="estrelas-hud" aria-label="Cobranças"></div>
+          <div class="hud-grupo">
+            <button class="btn-hud" id="btn-ajuda" type="button" aria-label="Ajuda">?</button>
+            <button class="btn-hud" id="btn-config" type="button" aria-label="Ajustes">⚙</button>
+            <button class="btn-hud" id="btn-sair" type="button" aria-label="Sair da partida">⌂</button>
           </div>
+        </div>
+        <div class="placar" aria-live="polite">
+          <span><span id="rotulo-a">DEFESAS</span> <b id="placar-a">0</b></span>
+          <span><span id="rotulo-b">GOLS</span> <b id="placar-b">0</b></span>
+          <span class="placar-cobranca" id="placar-cobranca">1/5</span>
+        </div>
+        <div class="aviso" id="aviso" aria-live="assertive"></div>
+        <div class="dica" id="dica" hidden></div>
+        <!-- controles do goleiro: as 5 direções (também dá para tocar no canto do gol) -->
+        <div class="controles" id="controles" hidden>
+          <button class="dir d-esqAlto" type="button" data-zona="esqAlto" aria-label="Pular alto à esquerda">↖</button>
+          <button class="dir d-esqBaixo" type="button" data-zona="esqBaixo" aria-label="Pular à esquerda">⬅</button>
+          <button class="dir d-centro" type="button" data-zona="centro" aria-label="Defender no centro">⬆</button>
+          <button class="dir d-dirBaixo" type="button" data-zona="dirBaixo" aria-label="Pular à direita">➡</button>
+          <button class="dir d-dirAlto" type="button" data-zona="dirAlto" aria-label="Pular alto à direita">↗</button>
         </div>
       </div>
 
@@ -178,8 +177,8 @@
 
   <footer class="credito">© <b>Marco Nunes</b> — Todos os direitos reservados</footer>
 
-  <script src="dados.js?v=1"></script>
-  <script src="jogo.js?v=1"></script>
+  <script src="dados.js?v=3"></script>
+  <script src="jogo.js?v=3"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
