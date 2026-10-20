@@ -11,7 +11,7 @@ class H(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
     def do_POST(self):
         caminho = self.path.strip('/')
-        if not re.fullmatch(r'(personagens/[a-z-]+|assets|icons|ferramentas/previa)/[a-z0-9-]+\.(png|jpg|json)', caminho):
+        if not re.fullmatch(r'(personagens/[a-z-]+|assets|icons|ferramentas/previa|ferramentas/ancoras)/[a-z0-9-]+\.(png|jpg|json)', caminho):
             self.send_error(400); return
         destino = os.path.join(RAIZ, *caminho.split('/'))
         os.makedirs(os.path.dirname(destino), exist_ok=True)

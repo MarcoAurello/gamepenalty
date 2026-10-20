@@ -19,7 +19,13 @@
 
   // ---------- Imagens dos personagens ----------
   const IMG = {};
-  for (const [id, p] of Object.entries(PERSONAGENS)) { const i = new Image(); i.src = p.src; IMG[id] = i; }
+  for (const [id, p] of Object.entries(PERSONAGENS)) {
+    const i = new Image(); i.src = p.src; IMG[id] = i;
+    // a contagem de quadros vem do estados.json salvo pelo estúdio de sprites (assim dá para trocar os desenhos sem mexer no código)
+    fetch(p.src.replace(/sprites.png$/, 'estados.json')).then((r) => (r.ok ? r.json() : null)).then((j) => {
+      if (j && j.estados) { p.colunas = j.colunas; p.estados = j.estados; }
+    }).catch(() => { /* fica com o que está no dados.js */ });
+  }
 
   // mini sprite animado em telas de HTML (escolha do modo e fim)
   const timersCSS = new Map();

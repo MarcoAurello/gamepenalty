@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estúdio de sprites — Goleiro Orelha</title>
+<style>
+  :root { color-scheme: dark; --neon: #39e27a; --borda: #2a3644; }
+  body { margin: 0; font-family: system-ui, sans-serif; background: #0b0f14; color: #eef2f5; }
+  header { padding: 18px 20px; border-bottom: 1px solid var(--borda); }
+  h1 { margin: 0 0 4px; font-size: 1.4rem; }
+  header p { margin: 0; color: #8d99a6; max-width: 900px; line-height: 1.5; }
+  .abas { display: flex; gap: 8px; padding: 12px 20px; flex-wrap: wrap; }
+  .abas button, .btn { background: #141b24; color: #eef2f5; border: 1px solid var(--borda); border-radius: 10px; padding: 8px 14px; cursor: pointer; font: inherit; }
+  .abas button.ativo, .btn.forte { background: var(--neon); color: #05210f; border-color: var(--neon); font-weight: 700; }
+  main { padding: 0 20px 40px; }
+  section { border: 1px solid var(--borda); border-radius: 14px; padding: 16px; margin: 14px 0; background: #111821; }
+  section h2 { margin: 0 0 6px; font-size: 1.05rem; }
+  section > p { margin: 0 0 10px; color: #9aa6b2; line-height: 1.5; }
+  textarea { width: 100%; min-height: 88px; background: #0b1016; color: #d7e0e8; border: 1px solid var(--borda); border-radius: 10px; padding: 10px; font: 13px/1.45 ui-monospace, monospace; box-sizing: border-box; }
+  .linha { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+  canvas.mini { width: 180px; height: 180px; background: #00ff00; border-radius: 8px; }
+  .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .tira { border: 1px solid var(--borda); border-radius: 12px; padding: 10px; background: #0e141b; }
+  .tira h3 { margin: 0 0 6px; font-size: .95rem; }
+  .quadros { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .quadros canvas { width: 70px; height: 70px; background: repeating-conic-gradient(#243040 0 25%, #1b2532 0 50%) 0 0 / 14px 14px; border-radius: 6px; }
+  .ok { color: var(--neon); } .aviso { color: #ffb74d; } .ruim { color: #ff6b6b; }
+  .soltar { border: 2px dashed #3b4a5a; border-radius: 10px; padding: 10px; text-align: center; color: #8d99a6; cursor: pointer; }
+  .soltar.sobre { border-color: var(--neon); color: var(--neon); }
+  #folha { max-width: 100%; background: repeating-conic-gradient(#243040 0 25%, #1b2532 0 50%) 0 0 / 20px 20px; border-radius: 10px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎨 Estúdio de sprites</h1>
+  <p>Método <b>animated-sprite-gen</b>: (1) uma <b>âncora</b> aprovada do personagem, (2) <b>tiras inteiras</b> de cada animação geradas a partir dela
+  no Gemini (Nano Banana), (3) <b>normalização</b>: tira o fundo, acha cada quadro, aplica <b>uma escala só</b> para a tira toda (pela âncora), alinha os pés e monta a folha do jogo.</p>
+</header>
+<div class="abas" id="abas"></div>
+<main id="principal"></main>
+
+<script src="../dados.js"></script>
+<script src="tiras.js"></script>
+<script>
+const Q = QUADRO, PE = PE_DO_QUADRO, ALTURA_ALVO = 283;   // altura do personagem dentro do quadro de 448
+const ID_JOGO = { orelha: 'orelhaGoleiro', 'orelha-atacante': 'orelhaAtacante', 'rival-goleiro': 'rivalGoleiro', 'rival-atacante': 'rivalAtacante' };
+const estado = {};   // por personagem: { ancora, quadros: { estado: [canvas...] } }
+let atual = 'orelha';
+
+const $ = (s, r = document) => r.querySelector(s);
+const el = (tag, props = {}, ...filhos) => { const e = Object.assign(document.createElement(tag), props); filhos.forEach((f) => e.append(f)); return e; };
+const carregar = (src) => new Promise((ok, falha) => { const i = new Image(); i.onload = () => ok(i); i.onerror = falha; i.src = src; });
+const arquivoParaImagem = (f) => new Promise((ok, falha) => { const r = new FileReader(); r.onload = () => carregar(r.result).then(ok, falha); r.readAsDataURL(f); });
+function baixar(canvas, nome) { canvas.toBlob((b) => { const a = el('a', { href: URL.createObjectURL(b), download: nome }); a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }, 'image/png'); }
+async function salvarNoJogo(canvasOuBlob, caminho, nomeDownload) {
+  const blob = canvasOuBlob instanceof Blob ? canvasOuBlob : await new Promise((r) => canvasOuBlob.toBlob(r, 'image/png'));
+  try { const r = await fetch('/' + caminho, { method: 'POST', body: blob }); if (r.ok) return 'salvo no jogo'; } catch (e) { /* sem o servidor local */ }
+  const a = el('a', { href: URL.createObjectURL(blob), download: nomeDownload }); a.click();
+  return 'baixado (copie para ' + caminho + ')';
+}
+function copiar(txt, botao) { navigator.clipboard.writeText(txt).then(() => { const t = botao.textContent; botao.textContent = '✔ Copiado'; setTimeout(() => (botao.textContent = t), 1400); }); }
+
+// ---------- 1. tirar o fundo (verde, branco ou qualquer cor lisa) ----------
+function semFundo(img) {
+  const max = 2048, k = Math.min(1, max / Math.max(img.width, img.height));
+  const w = Math.round(img.width * k), h = Math.round(img.height * k);
+  const c = el('canvas', { width: w, height: h }), x = c.getContext('2d');
+  x.drawImage(img, 0, 0, w, h);
+  const d = x.getImageData(0, 0, w, h), p = d.data;
+  // cor do fundo: média dos 4 cantos
+  const amostra = [[2, 2], [w - 3, 2], [2, h - 3], [w - 3, h - 3]].map(([i, j]) => { const o = (j * w + i) * 4; return [p[o], p[o + 1], p[o + 2], p[o + 3]]; });
+  const transparente = amostra.every((a) => a[3] < 20);
+  const fundo = [0, 1, 2].map((k2) => amostra.reduce((s, a) => s + a[k2], 0) / 4);
+  const verde = fundo[1] > 150 && fundo[0] < 120 && fundo[2] < 120;
+  for (let o = 0; o < p.length; o += 4) {
+    if (transparente) continue;
+    const dist = Math.hypot(p[o] - fundo[0], p[o + 1] - fundo[1], p[o + 2] - fundo[2]);
+    let a = Math.max(0, Math.min(1, (dist - 38) / 45));
+    if (verde) {
+      // verde de chroma: também pega o que é "mais verde que o resto" e tira o reflexo verde das bordas
+      const excesso = p[o + 1] - Math.max(p[o], p[o + 2]);
+      if (excesso > 60) a = Math.min(a, Math.max(0, (110 - excesso) / 50));
+      if (excesso > 0) p[o + 1] = Math.max(p[o], p[o + 2]) + excesso * 0.25;
+    }
+    p[o + 3] = Math.round(p[o + 3] * a);
+  }
+  x.putImageData(d, 0, 0);
+  return c;
+}
+
+// ---------- 2. achar cada personagem na tira (componentes ligados) ----------
+function componentes(c) {
+  const w = c.width, h = c.height, p = c.getContext('2d').getImageData(0, 0, w, h).data;
+  const cel = 4, gw = Math.ceil(w / cel), gh = Math.ceil(h / cel), g = new Uint8Array(gw * gh);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (p[(y * w + x) * 4 + 3] > 90) g[((y / cel) | 0) * gw + ((x / cel) | 0)] = 1;
+  const rot = new Int32Array(gw * gh).fill(-1), caixas = [];
+  for (let i = 0; i < g.length; i++) {
+    if (!g[i] || rot[i] >= 0) continue;
+    const pilha = [i]; rot[i] = caixas.length;
+    let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1, n = 0;
+    while (pilha.length) {
+      const k = pilha.pop(), kx = k % gw, ky = (k / gw) | 0; n++;
+      x0 = Math.min(x0, kx); x1 = Math.max(x1, kx); y0 = Math.min(y0, ky); y1 = Math.max(y1, ky);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = kx + dx, ny = ky + dy; if (nx < 0 || ny < 0 || nx >= gw || ny >= gh) continue;
+        const j = ny * gw + nx; if (g[j] && rot[j] < 0) { rot[j] = caixas.length; pilha.push(j); }
+      }
+    }
+    caixas.push({ x0: x0 * cel, y0: y0 * cel, x1: (x1 + 1) * cel, y1: (y1 + 1) * cel, n });
+  }
+  // junta pedaços próximos (luva solta, bola no braço) e tira sujeirinhas
+  const perto = (a, b) => a.x0 - 14 < b.x1 && b.x0 - 14 < a.x1 && a.y0 - 14 < b.y1 && b.y0 - 14 < a.y1;
+  let mudou = true;
+  while (mudou) {
+    mudou = false;
+    for (let i = 0; i < caixas.length && !mudou; i++) for (let j = i + 1; j < caixas.length && !mudou; j++) {
+      if (perto(caixas[i], caixas[j])) {
+        const a = caixas[i], b = caixas[j];
+        caixas[i] = { x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1), n: a.n + b.n };
+        caixas.splice(j, 1); mudou = true;
+      }
+    }
+  }
+  const maior = Math.max(...caixas.map((b) => b.n));
+  const bons = caixas.filter((b) => b.n > maior * 0.18);
+  // ordem de leitura: linhas de cima para baixo, e da esquerda para a direita
+  const altMed = bons.reduce((s, b) => s + (b.y1 - b.y0), 0) / Math.max(1, bons.length);
+  bons.sort((a, b) => ((a.y0 + a.y1) / 2 - (b.y0 + b.y1) / 2));
+  const linhas = [];
+  bons.forEach((b) => { const yc = (b.y0 + b.y1) / 2, l = linhas.find((L) => Math.abs(L.yc - yc) < altMed * 0.5); l ? l.itens.push(b) : linhas.push({ yc, itens: [b] }); });
+  return linhas.flatMap((L) => L.itens.sort((a, b) => a.x0 - b.x0));
+}
+
+// ---------- 3. normalizar: uma escala para a tira toda, pés alinhados ----------
+function normalizar(c, caixas, escala) {
+  return caixas.map((b) => {
+    const q = el('canvas', { width: Q, height: Q }), x = q.getContext('2d');
+    const w = (b.x1 - b.x0) * escala, h = (b.y1 - b.y0) * escala;
+    x.imageSmoothingQuality = 'high';
+    x.drawImage(c, b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0, PE.x - w / 2, PE.y - h, w, h);
+    return q;
+  });
+}
+
+// ---------- telas ----------
+function guiaDePose(id) {
+  // o boneco atual (quadro "pronto") ampliado sobre fundo verde, para o Gemini seguir a pose
+  const c = el('canvas', { width: 1024, height: 1024 }), x = c.getContext('2d');
+  x.fillStyle = '#00ff00'; x.fillRect(0, 0, 1024, 1024);
+  return carregar(`../personagens/${id}/sprites.png`).then((img) => { x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, Q, Q, 512 - 380, 900 - 760 * (PE.y / Q), 760, 760); return c; });
+}
+function telaDeReferencia(ancora, n) {
+  // âncora no primeiro espaço + espaços reservados para os outros quadros (1024x1024)
+  const total = n + 1, cols = Math.min(total, total > 4 ? Math.ceil(total / 2) : total), lin = Math.ceil(total / cols);
+  const c = el('canvas', { width: 1024, height: 1024 }), x = c.getContext('2d');
+  x.fillStyle = '#00ff00'; x.fillRect(0, 0, 1024, 1024);
+  const sw = 1024 / cols, sh = 1024 / lin;
+  x.strokeStyle = 'rgba(0,120,0,.35)'; x.lineWidth = 2;
+  for (let i = 0; i < total; i++) x.strokeRect((i % cols) * sw + 6, Math.floor(i / cols) * sh + 6, sw - 12, sh - 12);
+  const k = Math.min((sw * 0.86) / ancora.width, (sh * 0.86) / ancora.height);
+  x.drawImage(ancora, (sw - ancora.width * k) / 2, sh * 0.93 - ancora.height * k, ancora.width * k, ancora.height * k);
+  return c;
+}
+function recorte(c) { const b = componentes(c)[0]; if (!b) return null; const r = el('canvas', { width: b.x1 - b.x0, height: b.y1 - b.y0 }); r.getContext('2d').drawImage(c, -b.x0, -b.y0); return r; }
+
+function zonaSoltar(texto, aoSoltar) {
+  const z = el('div', { className: 'soltar', textContent: texto });
+  const input = el('input', { type: 'file', accept: 'image/*', hidden: true });
+  z.append(input);
+  z.onclick = () => input.click();
+  input.onchange = () => input.files[0] && aoSoltar(input.files[0]);
+  z.ondragover = (e) => { e.preventDefault(); z.classList.add('sobre'); };
+  z.ondragleave = () => z.classList.remove('sobre');
+  z.ondrop = (e) => { e.preventDefault(); z.classList.remove('sobre'); e.dataTransfer.files[0] && aoSoltar(e.dataTransfer.files[0]); };
+  return z;
+}
+
+async function desenhar() {
+  const id = atual, p = PERSONAGENS_ESTUDIO[id], est = (estado[id] ||= { ancora: null, quadros: {} });
+  const raiz = $('#principal'); raiz.innerHTML = '';
+
+  // passo 1: âncora
+  const s1 = el('section', {}, el('h2', { textContent: `1. Âncora: ${p.nome}` }),
+    el('p', { innerHTML: 'Baixe o <b>guia de pose</b>, anexe no Gemini' + (id.startsWith('orelha') ? ' junto com uma <b>foto do menino</b>' : '') + ' e cole o texto. Gere até gostar e solte aqui a imagem aprovada.' }));
+  const guia = await guiaDePose(id); guia.className = 'mini';
+  const t1 = el('textarea', { value: promptAncora(id), readOnly: true });
+  const bCopiar1 = el('button', { className: 'btn', textContent: '📋 Copiar texto' }); bCopiar1.onclick = () => copiar(t1.value, bCopiar1);
+  const bGuia = el('button', { className: 'btn', textContent: '⬇ Baixar guia de pose' }); bGuia.onclick = () => baixar(guia, `guia-${id}.png`);
+  const prev = el('canvas', { className: 'mini', width: 400, height: 400 });
+  const info1 = el('span', { className: est.ancora ? 'ok' : 'aviso', textContent: est.ancora ? '✔ âncora aprovada' : 'falta a âncora aprovada' });
+  if (est.ancora) mostrarMini(prev, est.ancora);
+  s1.append(el('div', { className: 'linha' }, guia, prev), t1, el('div', { className: 'linha' }, bGuia, bCopiar1, info1),
+    zonaSoltar('Solte aqui a âncora aprovada (PNG/JPG do Gemini)', async (f) => {
+      const img = await arquivoParaImagem(f); const r = recorte(semFundo(img));
+      if (!r) { info1.textContent = 'não achei o personagem na imagem'; info1.className = 'ruim'; return; }
+      est.ancora = r; desenhar();
+    }));
+  raiz.append(s1);
+
+  // passo 2 e 3: tiras
+  const s2 = el('section', {}, el('h2', { textContent: '2. Tiras de animação' }),
+    el('p', { innerHTML: 'Para cada animação: baixe a <b>tela de referência</b> (a âncora já vai no primeiro espaço), anexe no Gemini com o texto e solte aqui a tira gerada. '
+      + 'O primeiro quadro (cópia da âncora) serve só para medir a escala e é descartado.' }));
+  const grade = el('div', { className: 'grade' });
+  for (const nome of p.linhas) {
+    if (p.espelhos[nome]) continue;
+    const [n] = p.tiras[nome];
+    const card = el('div', { className: 'tira' }, el('h3', { textContent: `${nome} · ${n} quadros` + (Object.entries(p.espelhos).find(([, v]) => v === nome) ? ' (o lado esquerdo sai espelhado)' : '') }));
+    const t = el('textarea', { value: promptTira(id, nome), readOnly: true });
+    const bC = el('button', { className: 'btn', textContent: '📋 Texto' }); bC.onclick = () => copiar(t.value, bC);
+    const bR = el('button', { className: 'btn', textContent: '⬇ Tela de referência', disabled: !est.ancora });
+    bR.onclick = () => baixar(telaDeReferencia(est.ancora, n), `referencia-${id}-${nome}.png`);
+    const status = el('span', { className: est.quadros[nome] ? 'ok' : 'aviso', textContent: est.quadros[nome] ? `✔ ${est.quadros[nome].length} quadros` : 'falta a tira' });
+    const qs = el('div', { className: 'quadros' });
+    (est.quadros[nome] || []).forEach((q) => { q.className = ''; qs.append(q); });
+    card.append(t, el('div', { className: 'linha' }, bR, bC, status), zonaSoltar('Solte a tira gerada', async (f) => {
+      const img = await arquivoParaImagem(f), semF = semFundo(img); let cx = componentes(semF);
+      if (cx.length < 2) { status.textContent = 'achei só ' + cx.length + ' personagem'; status.className = 'ruim'; return; }
+      // escala única pela âncora (primeiro quadro); se a IA não copiou a âncora, usa a média dos quadros
+      const escala = ALTURA_ALVO / (cx[0].y1 - cx[0].y0);
+      if (cx.length >= n + 1) cx = cx.slice(1, n + 1); else cx = cx.slice(0, n);
+      est.quadros[nome] = normalizar(semF, cx, escala);
+      desenhar();
+    }), qs);
+    grade.append(card);
+  }
+  s2.append(grade); raiz.append(s2);
+
+  // passo 4: montar e salvar
+  const s3 = el('section', {}, el('h2', { textContent: '3. Montar a folha e salvar no jogo' }),
+    el('p', { textContent: 'O que ainda não tiver tira nova continua com o desenho atual. As tiras "esq" saem espelhadas das "dir".' }));
+  const bMontar = el('button', { className: 'btn forte', textContent: '🧩 Montar e salvar no jogo' });
+  const info3 = el('span'); const img3 = el('img', { id: 'folha' });
+  bMontar.onclick = async () => { info3.textContent = 'montando…'; const r = await montar(id); img3.src = r.url; info3.textContent = r.msg; info3.className = 'ok'; };
+  s3.append(el('div', { className: 'linha' }, bMontar, info3), img3); raiz.append(s3);
+}
+function mostrarMini(c, img) { const x = c.getContext('2d'); x.clearRect(0, 0, c.width, c.height); const k = Math.min(c.width / img.width, c.height / img.height) * 0.92; x.drawImage(img, (c.width - img.width * k) / 2, (c.height - img.height * k) / 2, img.width * k, img.height * k); }
+
+async function montar(id) {
+  const p = PERSONAGENS_ESTUDIO[id], est = estado[id], antigo = PERSONAGENS[ID_JOGO[id]];
+  const velha = await carregar(`../personagens/${id}/sprites.png`);
+  let atualJson = null; try { atualJson = await (await fetch(`../personagens/${id}/estados.json`, { cache: 'no-store' })).json(); } catch (e) { /* ainda não existe */ }
+  const estVelho = (atualJson && atualJson.estados) || antigo.estados;
+  const linhas = p.linhas.map((nome) => {
+    const origem = p.espelhos[nome];
+    let qs = est.quadros[origem || nome];
+    if (qs && origem) qs = qs.map((q) => { const m = el('canvas', { width: Q, height: Q }), x = m.getContext('2d'); x.translate(Q, 0); x.scale(-1, 1); x.drawImage(q, 0, 0); return m; });
+    if (!qs) {   // mantém o desenho atual
+      const e = estVelho[nome];
+      qs = Array.from({ length: e.quadros }, (_, i) => { const m = el('canvas', { width: Q, height: Q }); m.getContext('2d').drawImage(velha, i * Q, e.linha * Q, Q, Q, 0, 0, Q, Q); return m; });
+    }
+    return { nome, qs };
+  });
+  const cols = Math.max(...linhas.map((l) => l.qs.length));
+  const folha = el('canvas', { width: cols * Q, height: linhas.length * Q }), x = folha.getContext('2d');
+  const json = { colunas: cols, estados: {} };
+  linhas.forEach((l, i) => {
+    l.qs.forEach((q, j) => x.drawImage(q, j * Q, i * Q));
+    const t = p.tiras[p.espelhos[l.nome] || l.nome];
+    json.estados[l.nome] = { linha: i, quadros: l.qs.length, fps: est.quadros[p.espelhos[l.nome] || l.nome] ? t[1] : estVelho[l.nome].fps, repete: est.quadros[p.espelhos[l.nome] || l.nome] ? t[2] : !!estVelho[l.nome].repete };
+  });
+  const r1 = await salvarNoJogo(folha, `personagens/${id}/sprites.png`, 'sprites.png');
+  await salvarNoJogo(new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' }), `personagens/${id}/estados.json`, 'estados.json');
+  return { url: folha.toDataURL('image/png'), msg: `✔ Folha ${cols}×${linhas.length} ${r1}` };
+}
+
+// abas dos personagens
+for (const [id, p] of Object.entries(PERSONAGENS_ESTUDIO)) {
+  const b = el('button', { textContent: p.nome });
+  b.onclick = () => { atual = id; document.querySelectorAll('.abas button').forEach((x) => x.classList.toggle('ativo', x === b)); desenhar(); };
+  $('#abas').append(b);
+}
+$('#abas').firstChild.classList.add('ativo');
+desenhar();
+window.__estudio = { semFundo, componentes, normalizar, telaDeReferencia, estado, montar, carregar };
+</script>
+</body>
+</html>

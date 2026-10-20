@@ -67,6 +67,9 @@ Tudo gerado no aparelho: batucada agitada de fundo (surdo, caixa, tamborim e ago
 - `ferramentas/boneco-plano.js` (estilo flat do jogo), `ferramentas/boneco.js` (estilo figurinha da capa e dos ícones)
   e `ferramentas/sprites.html` (gerador das folhas)
   (rode `python ferramentas/receber.py` e abra http://localhost:5570/ferramentas/sprites.html).
+- `ferramentas/estudio.html` e `ferramentas/tiras.js`: **estúdio de sprites** (método animated-sprite-gen) para trocar os desenhos
+  por arte gerada no Gemini: âncora, tiras e normalização. Passo a passo em `ferramentas/COMO-MELHORAR-SPRITES.md`.
+  Cada personagem tem um `estados.json` com os quadros de cada animação, que o jogo lê sozinho.
 - `referencias/`: protótipo, regras e fotos de referência (fora do servidor).
 
 ## Publicar na VPS (Dokploy)

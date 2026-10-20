@@ -1,13 +1,13 @@
 // Guarda os arquivos do jogo para funcionar offline.
 // Ao publicar uma versão nova, aumente a VERSAO e o ?v= no index.html.
-const VERSAO = 'goleiro-orelha-v4';
+const VERSAO = 'goleiro-orelha-v5';
 
 const ARQUIVOS = [
   './',
   './index.html',
-  './style.css?v=4',
-  './dados.js?v=4',
-  './jogo.js?v=4',
+  './style.css?v=5',
+  './dados.js?v=5',
+  './jogo.js?v=5',
   './manifest.json',
   './personagens/orelha/sprites.png',
   './personagens/orelha/capa.png',
@@ -15,6 +15,10 @@ const ARQUIVOS = [
   './personagens/orelha-atacante/sprites.png',
   './personagens/rival-goleiro/sprites.png',
   './personagens/rival-atacante/sprites.png',
+  './personagens/orelha/estados.json',
+  './personagens/orelha-atacante/estados.json',
+  './personagens/rival-goleiro/estados.json',
+  './personagens/rival-atacante/estados.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
