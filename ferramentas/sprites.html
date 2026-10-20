@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Gerador de sprites — Goleiro Orelha</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #2b3f52; color: #fff; font-family: system-ui, sans-serif; }
+  canvas { background: repeating-conic-gradient(#3a5166 0 25%, #33495d 0 50%) 0 0 / 32px 32px; margin: 8px; max-width: 95vw; }
+</style>
+</head>
+<body>
+<p id="estado">gerando…</p>
+<div id="saida"></div>
+<script src="boneco.js"></script>
+<script>
+/* Gera as folhas de sprites (quadros de 320x320) de cada personagem e salva em personagens/<id>/sprites.png.
+   Rode com: python ferramentas/receber.py e abra http://localhost:5570/ferramentas/sprites.html */
+const Q = 320;   // tamanho do quadro
+const P = (o) => ({ x: 160, y: 205, ...o });
+
+// ---------- poses do goleiro (de frente para a câmera) ----------
+const pronto = [
+  P({ bE: -55, aE: -150, bD: 55, aD: 150, cE: -28, pE: -8, cD: 28, pD: 8, rosto: 'foco' }),
+  P({ y: 209, bE: -60, aE: -158, bD: 60, aD: 158, cE: -32, pE: -10, cD: 32, pD: 10, rosto: 'foco' }),
+];
+// mergulho para a direita da tela (a esquerda é o espelho)
+const dirAlto = [
+  P({ x: 140, y: 212, rot: 18, bE: 60, aE: 120, bD: 90, aD: 140, cE: -30, pE: -15, cD: 15, pD: 30, rosto: 'foco', olhar: [1, -1] }),
+  P({ x: 128, y: 178, rot: 56, bE: 150, aE: 168, bD: 175, aD: 190, cE: -15, pE: -5, cD: 25, pD: 40, rosto: 'grito', olhar: [1, -1] }),
+  P({ x: 112, y: 170, rot: 80, bE: 160, aE: 172, bD: 192, aD: 200, cE: -6, pE: -2, cD: 12, pD: 22, rosto: 'grito', olhar: [1, 0] }),
+];
+const dirBaixo = [
+  P({ x: 140, y: 215, rot: 25, bE: 50, aE: 90, bD: 80, aD: 110, cE: -35, pE: -20, cD: 10, pD: 25, rosto: 'foco', olhar: [1, 1] }),
+  P({ x: 126, y: 232, rot: 64, bE: 130, aE: 150, bD: 155, aD: 172, cE: -15, pE: -5, cD: 20, pD: 35, rosto: 'grito', olhar: [1, 1] }),
+  P({ x: 108, y: 250, rot: 90, bE: 150, aE: 166, bD: 182, aD: 194, cE: -5, pE: 0, cD: 14, pD: 24, rosto: 'grito', olhar: [1, 0] }),
+];
+const pulo = [
+  P({ y: 222, bE: -35, aE: -60, bD: 35, aD: 60, cE: -35, pE: 5, cD: 35, pD: -5, rosto: 'foco', olhar: [0, -1] }),
+  P({ y: 186, bE: -160, aE: -175, bD: 160, aD: 175, cE: -25, pE: -35, cD: 25, pD: 35, rosto: 'grito', olhar: [0, -1] }),
+  P({ y: 176, bE: -168, aE: -178, bD: 168, aD: 178, cE: -20, pE: -45, cD: 20, pD: 45, rosto: 'grito', olhar: [0, -1] }),
+];
+const defesa = [
+  P({ y: 215, bE: -20, aE: 60, bD: 20, aD: -60, cE: -25, pE: -8, cD: 25, pD: 8, bola: [0, -32], rosto: 'foco' }),
+  P({ y: 212, bE: -20, aE: 62, bD: 20, aD: -62, cE: -22, pE: -6, cD: 22, pD: 6, bola: [0, -32], rosto: 'feliz' }),
+];
+const comemoraG = [
+  P({ bE: -150, aE: -165, bD: 150, aD: 165, cE: -15, pE: -5, cD: 15, pD: 5, rosto: 'feliz' }),
+  P({ y: 186, bE: -160, aE: -176, bD: 160, aD: 176, cE: -30, pE: 10, cD: 30, pD: -10, rosto: 'feliz' }),
+  P({ y: 200, bE: -135, aE: -120, bD: 135, aD: 120, cE: -18, pE: -6, cD: 18, pD: 6, rosto: 'feliz' }),
+];
+const tristeG = [
+  P({ y: 208, cab: 8, bE: -8, aE: -4, bD: 8, aD: 4, cE: -10, pE: -4, cD: 10, pD: 4, rosto: 'triste', olhar: [0, 1] }),
+  P({ y: 208, cab: -6, bE: -150, aE: 150, bD: 150, aD: -150, cE: -12, pE: -4, cD: 12, pD: 4, rosto: 'triste', olhar: [0, 1] }),
+];
+
+// ---------- poses do atacante (de costas, correndo para o gol) ----------
+const C = (o) => P({ costas: true, ...o });
+const prontoA = [
+  C({ bE: -15, aE: -8, bD: 15, aD: 8, cE: -10, pE: -4, cD: 10, pD: 4 }),
+  C({ y: 207, bE: -18, aE: -10, bD: 18, aD: 10, cE: -12, pE: -5, cD: 12, pD: 5 }),
+];
+const corrida = [
+  C({ y: 200, cE: -25, pE: 20, cD: 8, pD: 2, bE: -40, aE: -80, bD: 25, aD: 10 }),
+  C({ y: 205, cE: -10, pE: -2, cD: 10, pD: 2, bE: -20, aE: -20, bD: 20, aD: 20 }),
+  C({ y: 200, cE: -8, pE: -2, cD: 25, pD: -20, bE: -25, aE: -10, bD: 40, aD: 80 }),
+  C({ y: 205, cE: -10, pE: -2, cD: 10, pD: 2, bE: -20, aE: -20, bD: 20, aD: 20 }),
+];
+const chute = [
+  C({ y: 205, rot: -5, cE: -12, pE: -5, cD: 30, pD: 75, bE: -60, aE: -90, bD: 30, aD: 20 }),
+  C({ y: 203, rot: 8, cE: -8, pE: -3, cD: 55, pD: 60, bE: -70, aE: -100, bD: 60, aD: 90 }),
+  C({ y: 200, rot: 10, cE: -6, pE: -2, cD: 100, pD: 112, bE: -90, aE: -120, bD: 40, aD: 30 }),
+];
+const comemoraA = [
+  C({ bE: -155, aE: -170, bD: 155, aD: 170, cE: -12, pE: -4, cD: 12, pD: 4 }),
+  C({ y: 186, bE: -162, aE: -178, bD: 162, aD: 178, cE: -28, pE: 10, cD: 28, pD: -10 }),
+  C({ y: 200, bE: -150, aE: -176, bD: 60, aD: 150, cE: -14, pE: -4, cD: 14, pD: 4 }),
+];
+const tristeA = [
+  C({ y: 208, cab: 8, bE: -8, aE: -4, bD: 8, aD: 4, cE: -10, pE: -4, cD: 10, pD: 4 }),
+  C({ y: 208, bE: -150, aE: 150, bD: 150, aD: -150, cE: -12, pE: -4, cD: 12, pD: 4 }),
+];
+
+// estados na ordem das linhas da folha: [nome, quadros, espelhar]
+const GOLEIRO = [['pronto', pronto], ['dirAlto', dirAlto], ['dirBaixo', dirBaixo], ['esqAlto', dirAlto, true], ['esqBaixo', dirBaixo, true],
+  ['pulo', pulo], ['defesa', defesa], ['comemora', comemoraG], ['triste', tristeG]];
+const ATACANTE = [['pronto', prontoA], ['corrida', corrida], ['chute', chute], ['comemora', comemoraA], ['triste', tristeA]];
+
+function folha(estilo, estados) {
+  const cols = Math.max(...estados.map((e) => e[1].length));
+  const cv = document.createElement('canvas');
+  cv.width = cols * Q; cv.height = estados.length * Q;
+  const ctx = cv.getContext('2d');
+  const mapa = {};
+  estados.forEach(([nome, quadros, espelhar], linha) => {
+    mapa[nome] = { linha, quadros: quadros.length };
+    quadros.forEach((pose, col) => {
+      ctx.save();
+      ctx.translate(col * Q, linha * Q);
+      if (espelhar) { ctx.translate(Q, 0); ctx.scale(-1, 1); }
+      Boneco.desenhar(ctx, estilo, pose);
+      ctx.restore();
+    });
+  });
+  return { cv, mapa, cols, linhas: estados.length };
+}
+
+// figurinha do Orelha (capa), no estilo da referência
+function figurinha() {
+  const cv = document.createElement('canvas'); cv.width = 600; cv.height = 800;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(0, 0, 600, 800, 40); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.roundRect(28, 28, 544, 744, 22); ctx.clip();
+  const g = ctx.createLinearGradient(0, 0, 0, 800); g.addColorStop(0, '#5fc3ff'); g.addColorStop(0.62, '#2f97e0'); g.addColorStop(0.62, '#7fdcae'); g.addColorStop(1, '#4cc28b');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 600, 800);
+  // raios
+  ctx.globalAlpha = 0.12; ctx.fillStyle = '#fff';
+  for (let i = 0; i < 12; i++) { ctx.beginPath(); ctx.moveTo(300, 330); ctx.arc(300, 330, 700, i * 0.52, i * 0.52 + 0.22); ctx.fill(); }
+  ctx.globalAlpha = 1;
+  ctx.save(); ctx.translate(300, 520); ctx.scale(2.35, 2.35);
+  Boneco.desenhar(ctx, 'orelha', { x: 0, y: 0, bE: -95, aE: -140, bD: 95, aD: 140, cE: -20, pE: -6, cD: 20, pD: 6, rosto: 'foco' });
+  ctx.restore();
+  ctx.restore();
+  // bandeira do Brasil
+  ctx.save(); ctx.translate(60, 60);
+  ctx.fillStyle = '#009c3b'; ctx.fillRect(0, 0, 120, 84);
+  ctx.fillStyle = '#ffdf00'; ctx.beginPath(); ctx.moveTo(60, 8); ctx.lineTo(112, 42); ctx.lineTo(60, 76); ctx.lineTo(8, 42); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#002776'; ctx.beginPath(); ctx.arc(60, 42, 20, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(60, 70, 34, Math.PI * 1.25, Math.PI * 1.75); ctx.stroke();
+  ctx.lineWidth = 4; ctx.strokeStyle = '#1a1410'; ctx.strokeRect(0, 0, 120, 84);
+  ctx.restore();
+  // placa do nome
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = '#1a1410'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(300, 790); ctx.lineTo(300, 680); ctx.quadraticCurveTo(300, 664, 316, 664); ctx.lineTo(560, 664); ctx.lineTo(560, 790); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#1a1410'; ctx.font = '700 64px Fredoka'; ctx.textAlign = 'center'; ctx.fillText('Orelha', 432, 748);
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.beginPath(); ctx.roundRect(3, 3, 594, 794, 38); ctx.stroke();
+  return cv;
+}
+
+// ícone do app: cabeça do Orelha num círculo
+function icone(tam, margem = 0) {
+  const cv = document.createElement('canvas'); cv.width = tam; cv.height = tam;
+  const ctx = cv.getContext('2d');
+  const g = ctx.createRadialGradient(tam / 2, tam / 2, 0, tam / 2, tam / 2, tam / 2);
+  g.addColorStop(0, '#5fc3ff'); g.addColorStop(1, '#1f6fb8');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, tam, tam);
+  const s = (tam * (1 - margem)) / 230;
+  ctx.save(); ctx.translate(tam / 2, tam / 2 + 128 * s); ctx.scale(s, s);
+  Boneco.desenhar(ctx, 'orelha', { x: 0, y: 0, bE: -10, aE: -5, bD: 10, aD: 5, rosto: 'feliz' });
+  ctx.restore();
+  return cv;
+}
+
+async function salvar(cv, caminho) {
+  const b = await new Promise((r) => cv.toBlob(r, 'image/png'));
+  const r = await fetch('/' + caminho, { method: 'POST', body: b });
+  return caminho + ' ' + r.status;
+}
+
+(async () => {
+  await document.fonts.load('700 64px Fredoka');
+  const saida = document.getElementById('saida');
+  const res = [];
+  const lista = [
+    ['orelha', 'orelha', GOLEIRO], ['orelha-atacante', 'orelhaAtacante', ATACANTE],
+    ['rival-goleiro', 'rivalGoleiro', GOLEIRO], ['rival-atacante', 'rivalAtacante', ATACANTE],
+  ];
+  const mapas = {};
+  for (const [id, estilo, estados] of lista) {
+    const f = folha(estilo, estados);
+    saida.appendChild(f.cv);
+    mapas[id] = { colunas: f.cols, linhas: f.linhas, estados: f.mapa };
+    res.push(await salvar(f.cv, `personagens/${id}/sprites.png`));
+  }
+  const capa = figurinha(); saida.appendChild(capa);
+  res.push(await salvar(capa, 'personagens/orelha/capa.png'));
+  for (const [tam, nome, m] of [[192, 'icon-192', 0], [512, 'icon-512', 0], [512, 'icon-maskable-512', 0.25], [180, 'apple-touch-icon', 0]]) res.push(await salvar(icone(tam, m), `icons/${nome}.png`));
+  const json = new Blob([JSON.stringify(mapas, null, 2)], { type: 'application/json' });
+  res.push((await fetch('/ferramentas/previa/estados.json', { method: 'POST', body: json })).status);
+  document.getElementById('estado').textContent = res.join(' · ');
+  window.resultado = res;
+})();
+</script>
+</body>
+</html>

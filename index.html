@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1f6fb8">
+  <meta name="author" content="Marco Nunes">
+  <meta name="description" content="Goleiro Orelha: jogo de pênaltis e faltas. Defenda como goleiro ou desenhe o chute como atacante.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Goleiro Orelha">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <title>Goleiro Orelha</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+  <main class="app">
+
+    <!-- 1. Início: figurinha do Orelha e nome do jogador -->
+    <section class="tela ativa" id="tela-nome">
+      <div class="inicio">
+        <img class="figurinha" src="personagens/orelha/capa.png" alt="Figurinha do Goleiro Orelha" width="600" height="800">
+        <div class="inicio-lado">
+          <h1 class="titulo"><span>GOLEIRO</span> <span class="ouro">ORELHA</span></h1>
+          <p class="slogan">Pênaltis e faltas: defenda ou faça o gol!</p>
+          <form class="cartao" id="form-nome" autocomplete="off">
+            <label class="campo">
+              <span>Seu nome</span>
+              <input type="text" id="nome" maxlength="24" placeholder="Digite seu nome" required autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="go">
+            </label>
+            <p class="erro" id="erro-nome" role="alert"></p>
+            <button class="btn-grande" type="submit">Entrar em campo ▶</button>
+          </form>
+          <button class="btn-sec" id="btn-instalar" type="button" hidden>📲 Instalar app</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Modo: Goleiro ou Jogador -->
+    <section class="tela" id="tela-modo">
+      <h2 class="subtitulo">Escolha quem você quer ser, <span id="nome-modo"></span>!</h2>
+      <div class="grade-escolhas">
+        <button class="escolha" type="button" data-modo="goleiro">
+          <span class="escolha-sprite" data-sprite="orelhaGoleiro" data-estado="pronto"></span>
+          <span class="escolha-titulo">🧤 GOLEIRO</span>
+          <span class="escolha-texto">Pule para o canto certo e defenda o chute do atacante.</span>
+        </button>
+        <button class="escolha" type="button" data-modo="jogador">
+          <span class="escolha-sprite" data-sprite="orelhaAtacante" data-estado="comemora"></span>
+          <span class="escolha-titulo">⚽ JOGADOR</span>
+          <span class="escolha-texto">Desenhe o chute com o dedo e engane o goleiro.</span>
+        </button>
+      </div>
+      <button class="btn-sec" type="button" data-voltar="tela-nome">← Voltar</button>
+    </section>
+
+    <!-- 3. Cobrança e nível -->
+    <section class="tela" id="tela-nivel">
+      <h2 class="subtitulo">Como vai ser a disputa?</h2>
+      <div class="cartao cartao-config">
+        <p class="rotulo">Cobrança</p>
+        <div class="chips" id="chips-tipo">
+          <button class="chip ativo" type="button" data-tipo="penalti">⚽ Pênalti</button>
+          <button class="chip" type="button" data-tipo="falta">🧱 Falta</button>
+          <button class="chip" type="button" data-tipo="misto">🔁 Os dois</button>
+        </div>
+        <p class="rotulo">Nível</p>
+        <div class="chips" id="chips-nivel">
+          <button class="chip ativo" type="button" data-nivel="facil">🙂 Fácil</button>
+          <button class="chip" type="button" data-nivel="dificil">🔥 Difícil</button>
+        </div>
+        <p class="rotulo">Cobranças</p>
+        <div class="chips" id="chips-qtd">
+          <button class="chip ativo" type="button" data-qtd="5">5</button>
+          <button class="chip" type="button" data-qtd="10">10</button>
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="btn-sec" type="button" data-voltar="tela-modo">← Voltar</button>
+        <button class="btn-grande" id="btn-comecar" type="button">Começar ▶</button>
+      </div>
+    </section>
+
+    <!-- 4. Jogo: painel lateral + campo -->
+    <section class="tela" id="tela-jogo">
+      <div class="jogo">
+        <nav class="painel" aria-label="Controles do jogo">
+          <button class="btn-painel" id="btn-som" type="button" aria-label="Som ligado"><span class="ic">⏻</span><span class="tx">Som</span></button>
+          <button class="btn-painel" id="btn-pausa" type="button" aria-label="Pausar"><span class="ic">⏸</span><span class="tx">Pausar</span></button>
+          <button class="btn-painel" id="btn-config" type="button" aria-label="Configurações"><span class="ic">⚙</span><span class="tx">Ajustes</span></button>
+          <button class="btn-painel" id="btn-ajuda" type="button" aria-label="Ajuda"><span class="ic">?</span><span class="tx">Ajuda</span></button>
+          <button class="btn-painel" id="btn-sair" type="button" aria-label="Sair da partida"><span class="ic">⌂</span><span class="tx">Sair</span></button>
+        </nav>
+        <div class="campo-area">
+          <canvas id="campo" aria-label="Campo de futebol"></canvas>
+          <div class="placar" aria-live="polite">
+            <p class="placar-titulo">PLACAR</p>
+            <p><span id="rotulo-a">DEFESAS</span> <b id="placar-a">0</b></p>
+            <p><span id="rotulo-b">GOLS</span> <b id="placar-b">0</b></p>
+            <p class="placar-cobranca" id="placar-cobranca">1/5</p>
+          </div>
+          <div class="aviso" id="aviso" aria-live="assertive"></div>
+          <div class="dica" id="dica" hidden></div>
+          <!-- controles do goleiro: as 5 direções -->
+          <div class="controles" id="controles" hidden>
+            <p class="controles-titulo">CONTROLES DO GOLEIRO</p>
+            <div class="controles-grade">
+              <button class="dir" type="button" data-zona="esqAlto" aria-label="Pular alto à esquerda">↖</button>
+              <button class="dir" type="button" data-zona="centro" aria-label="Defender no centro">⬆</button>
+              <button class="dir" type="button" data-zona="dirAlto" aria-label="Pular alto à direita">↗</button>
+              <button class="dir" type="button" data-zona="esqBaixo" aria-label="Pular à esquerda">⬅</button>
+              <span></span>
+              <button class="dir" type="button" data-zona="dirBaixo" aria-label="Pular à direita">➡</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- explicação antes da primeira cobrança -->
+      <div class="modal" id="modal-ajuda" hidden>
+        <div class="cartao modal-cartao">
+          <h3 class="subtitulo" id="ajuda-titulo">Como jogar</h3>
+          <div id="ajuda-texto"></div>
+          <button class="btn-grande" id="ajuda-ok" type="button">Bora! ▶</button>
+        </div>
+      </div>
+      <div class="modal" id="modal-pausa" hidden>
+        <div class="cartao modal-cartao">
+          <h3 class="subtitulo">⏸ Jogo pausado</h3>
+          <div class="linha-botoes">
+            <button class="btn-grande" id="pausa-continuar" type="button">Continuar ▶</button>
+            <button class="btn-sec" id="pausa-sair" type="button">Sair da partida</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal" id="modal-config" hidden>
+        <div class="cartao modal-cartao">
+          <h3 class="subtitulo">⚙ Ajustes</h3>
+          <p class="rotulo">Nível (vale na próxima cobrança)</p>
+          <div class="chips" id="config-nivel">
+            <button class="chip" type="button" data-nivel="facil">🙂 Fácil</button>
+            <button class="chip" type="button" data-nivel="dificil">🔥 Difícil</button>
+          </div>
+          <p class="rotulo">Torcida</p>
+          <div class="chips" id="config-torcida">
+            <button class="chip" type="button" data-torcida="1">📣 Ligada</button>
+            <button class="chip" type="button" data-torcida="0">🤫 Desligada</button>
+          </div>
+          <button class="btn-grande" id="config-ok" type="button">OK</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Fim -->
+    <section class="tela" id="tela-fim">
+      <div class="cartao cartao-fim">
+        <span class="fim-sprite" id="fim-sprite"></span>
+        <h2 class="subtitulo" id="fim-titulo">Fim de jogo!</h2>
+        <p class="fim-placar" id="fim-placar"></p>
+        <p class="estrelas" id="fim-estrelas"></p>
+        <p class="fim-texto" id="fim-texto"></p>
+        <p class="recorde" id="fim-recorde"></p>
+        <div class="linha-botoes">
+          <button class="btn-grande" id="btn-de-novo" type="button">↻ Jogar de novo</button>
+          <button class="btn-sec" id="btn-trocar-modo" type="button">Trocar modo</button>
+        </div>
+      </div>
+      <div class="confete" id="confete" aria-hidden="true"></div>
+    </section>
+  </main>
+
+  <footer class="credito">© <b>Marco Nunes</b> — Todos os direitos reservados</footer>
+
+  <script src="dados.js?v=1"></script>
+  <script src="jogo.js?v=1"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+1. Conceito Geral
+Jogo de futebol arcade 2D focado no confronto direto de pênaltis e faltas entre um atacante e um goleiro, permitindo que a criança escolha qual dos dois papéis quer assumir na partida.
+
+2. Modos de Jogo (Seleção Inicial)
+🧤 Modo Goleiro
+Objetivo: Defender a bola chutada pelo computador (ou outro jogador).
+
+Controles:
+
+Setas do teclado / Botões na tela: Controlam a direção do pulo do goleiro (Esquerda, Direita, Alto Esquerda, Alto Direita, Centro).
+
+Mecânica: O jogador precisa reagir ao momento em que a bola é chutada para adivinhar/alcançar a trajetória da bola e realizar a defesa.
+
+⚽ Modo Jogador (Atacante)
+Objetivo: Marcar o gol superando a defesa do goleiro.
+
+Controles:
+
+Desenho da Trajetória (Parábola): O jogador desenha com o dedo ou mouse uma linha/curva partindo do pé do jogador em direção à trave.
+
+Mecânica: Quanto mais bem desenhada e ajustada for a curva (efeito na bola), maior a chance de enganar o goleiro e acertar os cantos do gol.
+
+3. Interface Visual (Layout do Painel)
+Painel Esquerdo (Menu Lateral):
+
+Botões de navegação e controle (Ligar/Desligar, Play, Configurações, Ajuda/Instruções).
+
+Campo de Jogo (Visão Principal):
+
+Visão de Cima/Perspectiva: Exibe o campo de futebol completo com o atacante na entrada da área, a bola posicionada, e a baliza ao fundo com o goleiro preparado.
+
+Guia Visual de Trajetória: Linhas pontilhadas indicando o arco do chute quando no modo atacante, ou setas de direção ao redor do goleiro quando no modo defesa.
