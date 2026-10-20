@@ -148,7 +148,12 @@ function guiaDePose(id) {
   // o boneco atual (quadro "pronto") ampliado sobre fundo verde, para o Gemini seguir a pose
   const c = el('canvas', { width: 1024, height: 1024 }), x = c.getContext('2d');
   x.fillStyle = '#00ff00'; x.fillRect(0, 0, 1024, 1024);
-  return carregar(`../personagens/${id}/sprites.png`).then((img) => { x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, Q, Q, 512 - 380, 900 - 760 * (PE.y / Q), 760, 760); return c; });
+  return carregar(`../personagens/${id}/sprites.png`).then((img) => {
+    const f = el('canvas', { width: Q, height: Q }); f.getContext('2d').drawImage(img, 0, 0, Q, Q, 0, 0, Q, Q);
+    const b = componentes(f)[0], w = b.x1 - b.x0, h = b.y1 - b.y0, k = Math.min(860 / h, 860 / w);
+    x.imageSmoothingQuality = 'high'; x.drawImage(f, b.x0, b.y0, w, h, 512 - w * k / 2, 970 - h * k, w * k, h * k);
+    return c;
+  });
 }
 function telaDeReferencia(ancora, n) {
   // âncora no primeiro espaço + espaços reservados para os outros quadros (1024x1024)
