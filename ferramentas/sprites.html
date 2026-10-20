@@ -163,6 +163,9 @@ async function salvar(cv, caminho) {
 
 (async () => {
   await document.fonts.load('700 64px Fredoka');
+  // cabeça e orelhas da âncora do Gemini (se existirem)
+  const carregarImg = (src) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src + '?' + Date.now(); });
+  Object.assign(BonecoPlano.imagens, { cabeca: await carregarImg('../personagens/orelha/cabeca.png'), orelhaE: await carregarImg('../personagens/orelha/orelha-esq.png'), orelhaD: await carregarImg('../personagens/orelha/orelha-dir.png') });
   const saida = document.getElementById('saida');
   const res = [];
   const lista = [

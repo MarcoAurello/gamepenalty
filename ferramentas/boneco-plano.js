@@ -3,10 +3,12 @@
    0 = para baixo, 90 = para a direita da tela, 180 = para cima. © Marco Nunes — Todos os direitos reservados. */
 const BonecoPlano = (() => {
   const RAD = Math.PI / 180;
+  // imagens da âncora do Gemini (cabeça e orelhas do Orelha), carregadas pelo gerador antes de desenhar
+  const imagens = {};
   const dir = (a, l) => [Math.sin(a * RAD) * l, Math.cos(a * RAD) * l];
   const EXTRA = {
-    orelha: { luva: '#7d8794', luvaClaro: '#9aa4b1', chuteira: '#151515', meia: '#2f97e0', sombraCamisa: '#2b8fd6' },
-    orelhaAtacante: { chuteira: '#151515', meia: '#2f97e0', sombraCamisa: '#2b8fd6' },
+    orelha: { luva: '#7d8794', luvaClaro: '#9aa4b1', chuteira: '#151515', meia: '#2f97e0', sombraCamisa: '#2b8fd6', fotoCabeca: true },
+    orelhaAtacante: { chuteira: '#151515', meia: '#2f97e0', sombraCamisa: '#2b8fd6', fotoCabeca: true },
     rivalGoleiro: { luva: '#7d8794', luvaClaro: '#9aa4b1', chuteira: '#d32f2f', meia: '#ffffff', camisa: '#f5b800', camisaSombra: '#e0a500', sombraCamisa: '#e8ab00', detalhe: '#3c3c3c', calcao: '#3c3c3c', joelheira: '#3c3c3c' },
     rivalAtacante: { chuteira: '#111', meia: '#e53935', sombraCamisa: '#c62828' },
   };
@@ -47,8 +49,23 @@ const BonecoPlano = (() => {
     ctx.translate(0, -86);
     ctx.rotate((p.cab || 0) * RAD);
     ctx.fillStyle = e.pele; ctx.fillRect(-5, 8, 10, 12);   // pescoço
-    orelha(ctx, -14, 1, -1, e);
-    orelha(ctx, 14, 1, 1, e);
+    const im = imagens;
+    // Orelha de frente: rosto, cabelo e orelhas da âncora desenhada no Gemini
+    if (e.fotoCabeca && im.cabeca && !costas) {
+      const s = 0.224;   // 183 px da âncora (topo do cabelo ao queixo) = 41 px aqui
+      ctx.drawImage(im.cabeca, -152 * s, -102 * s, im.cabeca.width * s, im.cabeca.height * s);
+      ctx.restore();
+      return;
+    }
+    // Orelha de costas: as orelhas da âncora atrás da nuca
+    if (e.fotoCabeca && im.orelhaE && costas) {
+      const s = 0.24;
+      ctx.drawImage(im.orelhaE, -15 - im.orelhaE.width * s * 0.62, -20, im.orelhaE.width * s, im.orelhaE.height * s);
+      ctx.drawImage(im.orelhaD, 15 - im.orelhaD.width * s * 0.38, -20, im.orelhaD.width * s, im.orelhaD.height * s);
+    } else {
+      orelha(ctx, -14, 1, -1, e);
+      orelha(ctx, 14, 1, 1, e);
+    }
     // rosto oval (mais fino no Orelha)
     ctx.fillStyle = e.pele;
     ctx.beginPath(); ctx.ellipse(0, 0, e.rosto === 'fino' ? 14 : 15, 17, 0, 0, Math.PI * 2); ctx.fill();
@@ -173,5 +190,5 @@ const BonecoPlano = (() => {
     ctx.restore();
   }
 
-  return { desenhar };
+  return { desenhar, imagens };
 })();
